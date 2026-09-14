@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: cluster-radar-db
+    environment:
+      POSTGRES_USER: radar
+      POSTGRES_PASSWORD: radar_dev_password
+      POSTGRES_DB: cluster_radar
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
