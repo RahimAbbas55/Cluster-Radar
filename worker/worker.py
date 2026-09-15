@@ -5,8 +5,18 @@ from datetime import datetime
 import time
 from feeds.coingecko import CoinGeckoChecker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://radar:radar_dev_password@localhost:5432/cluster_radar")
-engine = create_engine(DATABASE_URL)
+# build DATABASE_URL from parts if not given directly (k8s path),
+# otherwise fall back to a full URL (local docker-compose path)
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    user = os.getenv("POSTGRES_USER", "radar")
+    password = os.getenv("POSTGRES_PASSWORD", "radar_dev_password")
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = os.getenv("POSTGRES_PORT", "5432")
+    db = os.getenv("POSTGRES_DB", "cluster_radar")
+    database_url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
+
+engine = create_engine(database_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -56,6 +66,9 @@ def run():
                 print(f"[{record.checked_at}] {record.source}: success={record.success} latency={record.latency_ms:.1f}ms stale={record.is_stale}")
         finally:
             db.close()
+        # touch a file each cycle - used as a simple liveness signal for k8s
+        with open("/tmp/worker_alive", "w") as f:
+            f.write(str(datetime.utcnow()))
         time.sleep(POLL_INTERVAL_SECONDS)
 
 if __name__ == "__main__":

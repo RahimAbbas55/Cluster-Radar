@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: cluster-radar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: cluster-radar-worker:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: postgres-credentials
+          env:
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POLL_INTERVAL_SECONDS
+              value: "30"
+          livenessProbe:
+            exec:
+              # fails if the file hasn't been touched in the last 90s (3 poll cycles)
+              command:
+                - sh
+                - -c
+                - test $(($(date +%s) - $(date -r /tmp/worker_alive +%s 2>/dev/null || echo 0))) -lt 90
+            initialDelaySeconds: 15
+            periodSeconds: 30
