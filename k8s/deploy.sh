@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
 
-echo "Applying namespace and secrets..."
+echo "Applying namespace, secrets, and config..."
 kubectl apply -f k8s/manifests/namespace.yaml
 kubectl apply -f k8s/manifests/secret.yaml
+kubectl apply -f k8s/manifests/configmap.yaml
 
 echo "Deploying Postgres..."
 kubectl apply -f k8s/manifests/postgres-pvc.yaml

@@ -26,13 +26,13 @@ degrades.
 
 ## Architecture
 
-\`\`\`mermaid
+```mermaid
 graph LR
     W[Worker] -->|polls| F[Market Data Feed]
     W -->|writes health records| DB[(Postgres)]
     A[API] -->|reads| DB
     C[Client / curl] -->|GET /feeds/source/status| A
-\`\`\`
+```
 
 - **worker/** — polls configured feeds, writes health records to Postgres
 - **api/** — FastAPI service, exposes `/health` and `/feeds/{source}/status`
@@ -40,11 +40,11 @@ graph LR
 
 ## Setup (local, via Docker Compose)
 
-\`\`\`bash
+```bash
 git clone <repo-url>
 cd cluster-radar
 docker compose up --build
-\`\`\`
+```
 
 This starts Postgres, the worker, and the API together. The worker waits
 for Postgres to be healthy before connecting (see `docker-compose.yml`
@@ -52,24 +52,38 @@ healthcheck).
 
 ## Verify it's working
 
-\`\`\`bash
+```bash
 curl http://localhost:8000/health
 curl http://localhost:8000/feeds/coingecko/status
 curl http://localhost:8000/feeds/coingecko/history
-\`\`\`
+```
+
+## Deploying to Kubernetes (local, via kind)
+
+Prereqs: `kind`, `kubectl`, Docker.
+
+```bash
+kind create cluster --name cluster-radar --config k8s/kind-config.yaml
+cp k8s/manifests/secret.example.yaml k8s/manifests/secret.yaml
+# edit secret.yaml with your own values, then:
+./k8s/deploy.sh
+```
+
+Verify:
+```bash
+kubectl get pods -n cluster-radar
+curl http://localhost:8000/health
+curl http://localhost:8000/feeds/coingecko/status
+```
 
 ## Status
 
-**Phase 1 complete:** local multi-service app running via Docker Compose
-(API + worker + Postgres), with a working CoinGecko feed checker.
+**Phase 1 complete:** local multi-service app running via Docker Compose.
 
-**Next — Phase 2:** package as a Helm chart, deploy to a local k8s cluster
-(kind/minikube), add liveness/readiness probes, and load-test with an HPA.
+**Phase 2 complete:** migrated to Kubernetes — Deployments, Services, PVC
+for Postgres, Secret + ConfigMap for config, liveness/readiness probes on
+all three services, verified reproducible from a clean `kind` cluster via
+`deploy.sh`.
 
-## Notes / known gaps
-
-- Staleness is currently detected by comparing consecutive price values —
-  CoinGecko doesn't expose a clean "last updated" timestamp, so
-  `seconds_since_update` is not yet populated.
-- Only one feed source (CoinGecko) is wired up so far; more sources will
-  be added once the k8s deployment pattern is proven.
+**Next — Phase 3:** package as a Helm chart, add an HPA, and load-test
+scaling behavior.

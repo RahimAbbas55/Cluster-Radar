@@ -22,6 +22,8 @@ spec:
           envFrom:
             - secretRef:
                 name: postgres-credentials
+            - configMapRef:
+                name: cluster-radar-config
           env:
             - name: POSTGRES_HOST
               value: postgres
