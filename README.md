@@ -10,22 +10,66 @@
 A Kubernetes learning project: a market data feed health/SLA monitor.
 
 ## What it does
-Workers poll market data feeds and record staleness, latency, and gaps.
-The API exposes health metrics per feed source. Postgres stores the
-time-series health history.
+
+A worker service polls market data feeds (starting with CoinGecko) on an
+interval, measuring latency and detecting staleness. Results are stored in
+Postgres. An API service exposes the latest status and history per feed
+source.
 
 ## Why it exists
-This project exists to learn Kubernetes orchestration concepts (Deployments,
-Services, HPA, self-healing, observability) using a realistic multi-service
-app rather than a toy example.
+
+Built to learn real Kubernetes orchestration concepts using a genuine
+multi-service system rather than a toy example — multiple replicas,
+horizontal autoscaling, self-healing, and observability, applied to a
+problem relevant to fintech infra: detecting when a data feed silently
+degrades.
 
 ## Architecture
-- `api/` - FastAPI service, exposes feed health endpoints
-- `worker/` - polls configured feeds on an interval, writes health records
-- Postgres - stores feed health time-series
+
+\`\`\`mermaid
+graph LR
+    W[Worker] -->|polls| F[Market Data Feed]
+    W -->|writes health records| DB[(Postgres)]
+    A[API] -->|reads| DB
+    C[Client / curl] -->|GET /feeds/source/status| A
+\`\`\`
+
+- **worker/** — polls configured feeds, writes health records to Postgres
+- **api/** — FastAPI service, exposes `/health` and `/feeds/{source}/status`
+- **Postgres** — stores feed health time-series
+
+## Setup (local, via Docker Compose)
+
+\`\`\`bash
+git clone <repo-url>
+cd cluster-radar
+docker compose up --build
+\`\`\`
+
+This starts Postgres, the worker, and the API together. The worker waits
+for Postgres to be healthy before connecting (see `docker-compose.yml`
+healthcheck).
+
+## Verify it's working
+
+\`\`\`bash
+curl http://localhost:8000/health
+curl http://localhost:8000/feeds/coingecko/status
+curl http://localhost:8000/feeds/coingecko/history
+\`\`\`
 
 ## Status
-Phase 1: local development (Docker Compose), raw k8s manifests next.
 
-## Setup
-See docker-compose.yml. Instructions added as services come online.
+**Phase 1 complete:** local multi-service app running via Docker Compose
+(API + worker + Postgres), with a working CoinGecko feed checker.
+
+**Next — Phase 2:** package as a Helm chart, deploy to a local k8s cluster
+(kind/minikube), add liveness/readiness probes, and load-test with an HPA.
+
+## Notes / known gaps
+
+- Staleness is currently detected by comparing consecutive price values —
+  CoinGecko doesn't expose a clean "last updated" timestamp, so
+  `seconds_since_update` is not yet populated.
+- Only one feed source (CoinGecko) is wired up so far; more sources will
+  be added once the k8s deployment pattern is proven.

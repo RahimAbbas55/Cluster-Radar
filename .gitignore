@@ -3,5 +3,7 @@ __pycache__/
 .env
 .venv/
 venv/
+api/venv/
+worker/venv/
 *.log
 .DS_Store
