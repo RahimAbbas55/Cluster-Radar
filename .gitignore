@@ -6,4 +6,4 @@ venv/
 api/venv/
 worker/venv/
 *.log
-.DS_Store
+.DS_Storek8s/manifests/secret.yaml
