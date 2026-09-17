@@ -42,4 +42,4 @@ spec:
               path: /health
               port: {{ .Values.api.port }}
             initialDelaySeconds: 10
-            periodSeconds: 10s
+            periodSeconds: 10
