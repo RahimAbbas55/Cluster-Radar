@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
-  namespace: cluster-radar
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.api.replicas }}
   selector:
     matchLabels:
       app: api
@@ -15,29 +15,24 @@ spec:
     spec:
       containers:
         - name: api
-          image: cluster-radar-api:local
+          image: "{{ .Values.api.image }}:{{ .Values.api.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8000
+            - containerPort: {{ .Values.api.port }}
           envFrom:
             - secretRef:
                 name: postgres-credentials
             - configMapRef:
                 name: cluster-radar-config
-          env:
-            - name: POSTGRES_HOST
-              value: postgres
-            - name: POSTGRES_PORT
-              value: "5432"
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: {{ .Values.api.port }}
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: {{ .Values.api.port }}
             initialDelaySeconds: 10
-            periodSeconds: 10
+            periodSeconds: 10s

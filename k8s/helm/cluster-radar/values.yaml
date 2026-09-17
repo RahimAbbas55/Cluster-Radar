@@ -1,0 +1,22 @@
+namespace: cluster-radar
+
+api:
+  image: cluster-radar-api
+  tag: local
+  replicas: 1
+  port: 8000
+  nodePort: 30080
+
+worker:
+  image: cluster-radar-worker
+  tag: local
+  replicas: 1
+
+postgres:
+  image: postgres
+  tag: "16"
+
+config:
+  postgresHost: postgres
+  postgresPort: "5432"
+  pollIntervalSeconds: "30"

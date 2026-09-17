@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:16
+          image: "{{ .Values.postgres.image }}:{{ .Values.postgres.tag }}"
           ports:
             - containerPort: 5432
           envFrom:

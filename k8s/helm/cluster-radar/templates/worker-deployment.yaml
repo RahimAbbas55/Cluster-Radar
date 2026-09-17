@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker
-  namespace: cluster-radar
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.worker.replicas }}
   selector:
     matchLabels:
       app: worker
@@ -15,23 +15,15 @@ spec:
     spec:
       containers:
         - name: worker
-          image: cluster-radar-worker:local
+          image: "{{ .Values.worker.image }}:{{ .Values.worker.tag }}"
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
                 name: postgres-credentials
             - configMapRef:
                 name: cluster-radar-config
-          env:
-            - name: POSTGRES_HOST
-              value: postgres
-            - name: POSTGRES_PORT
-              value: "5432"
-            - name: POLL_INTERVAL_SECONDS
-              value: "30"
           livenessProbe:
             exec:
-              # fails if the file hasn't been touched in the last 90s (3 poll cycles)
               command:
                 - sh
                 - -c

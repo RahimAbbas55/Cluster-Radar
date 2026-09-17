@@ -1,9 +1,10 @@
+# configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cluster-radar-config
-  namespace: cluster-radar
+  namespace: {{ .Values.namespace }}
 data:
-  POSTGRES_HOST: "postgres"
-  POSTGRES_PORT: "5432"
-  POLL_INTERVAL_SECONDS: "30"
+  POSTGRES_HOST: {{ .Values.config.postgresHost | quote }}
+  POSTGRES_PORT: {{ .Values.config.postgresPort | quote }}
+  POLL_INTERVAL_SECONDS: {{ .Values.config.pollIntervalSeconds | quote }}
