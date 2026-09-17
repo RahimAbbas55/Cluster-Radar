@@ -17,6 +17,13 @@ spec:
         - name: worker
           image: "{{ .Values.worker.image }}:{{ .Values.worker.tag }}"
           imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: {{ .Values.worker.resources.requests.cpu }}
+              memory: {{ .Values.worker.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.worker.resources.limits.cpu }}
+              memory: {{ .Values.worker.resources.limits.memory }}
           envFrom:
             - secretRef:
                 name: postgres-credentials
