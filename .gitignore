@@ -7,3 +7,9 @@ api/venv/
 worker/venv/
 *.log
 .DS_Storek8s/manifests/secret.yaml
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
